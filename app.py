@@ -29,4 +29,6 @@ def home():
                 answer = neet_data[key]
     return render_template_string(html, answer=answer)
 
-app.run()
+# IMPORTANT 🔥
+if __name__ == "__main__":
+    app.run()
