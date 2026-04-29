@@ -3,47 +3,21 @@ import os
 
 app = Flask(__name__)
 
-# ---------------- DATA ----------------
+# ---------------- NEET DATA ----------------
 data = {
     "dna kya hai": "DNA genetic material hota hai jo hereditary information carry karta hai.",
     "cell kya hai": "Cell life ka basic unit hota hai.",
     "photosynthesis kya hai": "Plants sunlight se food banate hain."
 }
 
-mcq = {
-    "dna": {
-        "q": "DNA ka full form kya hai?",
-        "options": ["A. Dynamic Network Analysis", "B. Deoxyribonucleic Acid", "C. Data Node Access", "D. None"],
-        "answer": "B"
-    }
-}
-
-# ---------------- ROUTE ----------------
+# ---------------- HOME PAGE ----------------
 @app.route("/", methods=["GET", "POST"])
 def home():
     answer = ""
-    mcq_html = ""
-
-    question = ""
 
     if request.method == "POST":
-        question = request.form.get("question", "").lower()
-        answer = data.get(question, "Topic not found in NEET AI 😄")
-
-        # MCQ trigger
-        if "mcq" in question:
-            m = mcq["dna"]
-            mcq_html = f"""
-            <h3>📚 MCQ Practice</h3>
-            <p>{m['q']}</p>
-            <ul>
-                <li>{m['options'][0]}</li>
-                <li>{m['options'][1]}</li>
-                <li>{m['options'][2]}</li>
-                <li>{m['options'][3]}</li>
-            </ul>
-            <p><b>Answer:</b> {m['answer']}</p>
-            """
+        q = request.form.get("question", "").lower()
+        answer = data.get(q, "Topic not found in NEET AI 😄")
 
     return f"""
 <!DOCTYPE html>
@@ -55,60 +29,55 @@ def home():
 body {{
     margin:0;
     font-family: Arial;
-    background: linear-gradient(to bottom, #87CEEB, #ffffff);
-    transition: 0.5s;
+    background: white;
+    color: black;
+    transition: 0.3s;
 }}
 
 .dark-mode {{
-    background: #121212;
+    background: black;
     color: white;
 }}
 
 .header {{
     text-align:center;
     padding:20px;
-    background: rgba(255,255,255,0.7);
+    background: #f2f2f2;
 }}
 
 .title {{
-    font-size:30px;
+    font-size:28px;
     font-weight:bold;
 }}
 
 .box {{
     text-align:center;
-    margin-top:40px;
+    margin-top:50px;
 }}
 
 input {{
-    padding:10px;
+    padding:12px;
     width:60%;
+    border:1px solid #ccc;
+    border-radius:8px;
 }}
 
 button {{
-    padding:10px 15px;
+    padding:12px 18px;
+    border:none;
     background:#007bff;
     color:white;
-    border:none;
+    border-radius:8px;
+    cursor:pointer;
 }}
 
-.clouds {{
-    position:absolute;
-    width:100%;
-    height:100px;
-    background:url('https://i.imgur.com/f6QbKQm.png');
-    animation: move 20s linear infinite;
+button:hover {{
+    background:#0056b3;
 }}
 
-@keyframes move {{
-    from {{background-position:0;}}
-    to {{background-position:1000px;}}
-}}
-
-footer {{
-    text-align:center;
-    margin-top:50px;
-    font-size:12px;
+.answer {{
+    margin-top:20px;
+    font-size:18px;
 }}
 
 </style>
@@ -118,27 +87,22 @@ footer {{
 
 <div class="header">
     <div class="title">🧠 NEET AI</div>
+    <p>DR.NIKHIL MBBS</p>
+
     <button onclick="toggleDark()">🌙 Dark Mode</button>
-    <button onclick="startVoice()">🎤 Voice</button>
 </div>
 
-<div class="clouds"></div>
-
 <div class="box">
+
     <form method="POST">
-        <input name="question" id="q" placeholder="Ask NEET question">
+        <input name="question" placeholder="NEET question likho">
         <button type="submit">Pucho</button>
     </form>
 
     <h3>Answer:</h3>
-    <p>{answer}</p>
+    <p class="answer">{answer}</p>
 
-    {mcq_html}
 </div>
-
-<footer>
-    © 2026 NEET AI | DR.NIKHIL MBBS
-</footer>
 
 <script>
 
@@ -147,14 +111,11 @@ function toggleDark() {{
     document.body.classList.toggle("dark-mode");
 }}
 
-// VOICE INPUT
-function startVoice() {{
-    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.onresult = function(event) {{
-        document.getElementById("q").value = event.results[0][0].transcript;
-    }}
-    recognition.start();
-}}
+// CLICK SOUND
+document.addEventListener("click", function() {{
+    let audio = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
+    audio.play();
+}});
 
 </script>
 
