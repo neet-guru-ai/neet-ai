@@ -20,7 +20,7 @@ def home():
         question = request.form.get("question").lower()
         answer = data.get(question, "Yeh topic abhi mere NEET database me nahi hai 😄")
         
-        return f"""
+       return f"""
         <h2>NEET AI 🤖</h2>
         <form method="POST">
             <input name="question" placeholder="Apna question likho">
@@ -36,7 +36,6 @@ def home():
         <button type="submit">Pucho</button>
     </form>
     """
-
 # FINAL FIX (Render ke liye)
 import os
 if __name__ == "__main__":
