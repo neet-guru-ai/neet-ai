@@ -38,7 +38,7 @@ def home():
             margin: 0;
             font-family: Arial;
             background: linear-gradient(to bottom, #87CEEB, #ffffff);
-        }
+        
 
         .header {
             text-align: center;
