@@ -3,118 +3,164 @@ import os
 
 app = Flask(__name__)
 
-# NEET AI simple database
+# ---------------- DATA ----------------
 data = {
-    "dna kya hai": "DNA genetic material hota hai jo hereditary information carry karta hai. Iska structure double helix hota hai.",
-    "what is dna": "DNA is the genetic material that carries hereditary information. It has a double helix structure.",
-
-    "cell kya hai": "Cell jeev ka basic structural aur functional unit hota hai.",
-    "what is cell": "Cell is the basic structural and functional unit of life.",
-
-    "photosynthesis kya hai": "Photosynthesis ek process hai jisme plants sunlight, CO2 aur water se glucose banate hain aur oxygen release karte hain.",
-    "what is photosynthesis": "Photosynthesis is the process by which plants make food using sunlight, CO2, and water."
+    "dna kya hai": "DNA genetic material hota hai jo hereditary information carry karta hai.",
+    "cell kya hai": "Cell life ka basic unit hota hai.",
+    "photosynthesis kya hai": "Plants sunlight se food banate hain."
 }
 
+mcq = {
+    "dna": {
+        "q": "DNA ka full form kya hai?",
+        "options": ["A. Dynamic Network Analysis", "B. Deoxyribonucleic Acid", "C. Data Node Access", "D. None"],
+        "answer": "B"
+    }
+}
 
+# ---------------- ROUTE ----------------
 @app.route("/", methods=["GET", "POST"])
 def home():
     answer = ""
+    mcq_html = ""
+
+    question = ""
 
     if request.method == "POST":
-        question = request.form.get("question")
-        if question:
-            question = question.lower()
-            answer = data.get(question, "Yeh topic abhi mere NEET database me nahi hai 😄")
+        question = request.form.get("question", "").lower()
+        answer = data.get(question, "Topic not found in NEET AI 😄")
+
+        # MCQ trigger
+        if "mcq" in question:
+            m = mcq["dna"]
+            mcq_html = f"""
+            <h3>📚 MCQ Practice</h3>
+            <p>{m['q']}</p>
+            <ul>
+                <li>{m['options'][0]}</li>
+                <li>{m['options'][1]}</li>
+                <li>{m['options'][2]}</li>
+                <li>{m['options'][3]}</li>
+            </ul>
+            <p><b>Answer:</b> {m['answer']}</p>
+            """
 
     return f"""
-   return """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NEET AI - DR.NIKHIL MBBS</title>
+<title>NEET AI</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: linear-gradient(to bottom, #87CEEB, #ffffff);
-        
+<style>
+body {{
+    margin:0;
+    font-family: Arial;
+    background: linear-gradient(to bottom, #87CEEB, #ffffff);
+    transition: 0.5s;
+}}
 
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(10px);
-        }
+.dark-mode {{
+    background: #121212;
+    color: white;
+}}
 
-        .title {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0;
-        }
+.header {{
+    text-align:center;
+    padding:20px;
+    background: rgba(255,255,255,0.7);
+}}
 
-        .subtitle {
-            margin: 0;
-            font-size: 14px;
-            color: #333;
-        }
+.title {{
+    font-size:30px;
+    font-weight:bold;
+}}
 
-        .box {
-            text-align: center;
-            margin-top: 40px;
-        }
+.box {{
+    text-align:center;
+    margin-top:40px;
+}}
 
-        input {
-            padding: 12px;
-            width: 60%;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-        }
+input {{
+    padding:10px;
+    width:60%;
+}}
 
-        button {
-            padding: 12px 20px;
-            border: none;
-            background: #007bff;
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-        }
+button {{
+    padding:10px 15px;
+    background:#007bff;
+    color:white;
+    border:none;
+}}
 
-        button:hover {
-            background: #0056b3;
-        }
+.clouds {{
+    position:absolute;
+    width:100%;
+    height:100px;
+    background:url('https://i.imgur.com/f6QbKQm.png');
+    animation: move 20s linear infinite;
+}}
 
-        .answer {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-    </style>
+@keyframes move {{
+    from {{background-position:0;}}
+    to {{background-position:1000px;}}
+}}
+
+footer {{
+    text-align:center;
+    margin-top:50px;
+    font-size:12px;
+}}
+
+</style>
 </head>
 
 <body>
 
 <div class="header">
     <div class="title">🧠 NEET AI</div>
-    <div class="subtitle">DR.NIKHIL MBBS</div>
+    <button onclick="toggleDark()">🌙 Dark Mode</button>
+    <button onclick="startVoice()">🎤 Voice</button>
 </div>
+
+<div class="clouds"></div>
 
 <div class="box">
     <form method="POST">
-        <input name="question" placeholder="Apna NEET question likho">
-        <button type="submit">Pucho 🎤</button>
+        <input name="question" id="q" placeholder="Ask NEET question">
+        <button type="submit">Pucho</button>
     </form>
 
-    {% if answer %}
-    <div class="answer">
-        <b>Answer:</b> {{answer}}
-    </div>
-    {% endif %}
+    <h3>Answer:</h3>
+    <p>{answer}</p>
+
+    {mcq_html}
 </div>
+
+<footer>
+    © 2026 NEET AI | DR.NIKHIL MBBS
+</footer>
+
+<script>
+
+// DARK MODE
+function toggleDark() {{
+    document.body.classList.toggle("dark-mode");
+}}
+
+// VOICE INPUT
+function startVoice() {{
+    let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.onresult = function(event) {{
+        document.getElementById("q").value = event.results[0][0].transcript;
+    }}
+    recognition.start();
+}}
+
+</script>
 
 </body>
 </html>
 """
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
