@@ -27,28 +27,93 @@ def home():
             answer = data.get(question, "Yeh topic abhi mere NEET database me nahi hai 😄")
 
     return f"""
-    <html>
-    <head>
-        <title>NEET AI</title>
+   return """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NEET AI - DR.NIKHIL MBBS</title>
 
-        <meta name="google-site-verification" content="wybgsv_hqeY1D-qeSDFGhC-DBitKnWUqre9QoDi9CdU" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(to bottom, #87CEEB, #ffffff);
+        }
 
-    </head>
-    <body style="text-align:center; font-family:Arial; margin-top:50px;">
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(10px);
+        }
 
-        <h2>NEET AI 🤖</h2>
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
 
-        <form method="POST">
-            <input name="question" placeholder="Apna question likho" style="padding:10px; width:250px;">
-            <button type="submit">Pucho</button>
-        </form>
+        .subtitle {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+        }
 
-        <h3>Answer:</h3>
-        <p>{answer}</p>
+        .box {
+            text-align: center;
+            margin-top: 40px;
+        }
 
-    </body>
-    </html>
-    """
+        input {
+            padding: 12px;
+            width: 60%;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .answer {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="title">🧠 NEET AI</div>
+    <div class="subtitle">DR.NIKHIL MBBS</div>
+</div>
+
+<div class="box">
+    <form method="POST">
+        <input name="question" placeholder="Apna NEET question likho">
+        <button type="submit">Pucho 🎤</button>
+    </form>
+
+    {% if answer %}
+    <div class="answer">
+        <b>Answer:</b> {{answer}}
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
+"""
 
 
 if __name__ == "__main__":
