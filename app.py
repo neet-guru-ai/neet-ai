@@ -5,12 +5,12 @@ app = Flask(__name__)
 
 # ---------------- NEET DATA ----------------
 data = {
-    "dna kya hai": "DNA genetic material hota hai jo hereditary information carry karta hai.",
+    "dna kya hai": "DNA genetic material hota hai jo hereditary info carry karta hai.",
     "cell kya hai": "Cell life ka basic unit hota hai.",
     "photosynthesis kya hai": "Plants sunlight se food banate hain."
 }
 
-# ---------------- HOME PAGE ----------------
+# ---------------- HOME ----------------
 @app.route("/", methods=["GET", "POST"])
 def home():
     answer = ""
@@ -23,61 +23,113 @@ def home():
 <!DOCTYPE html>
 <html>
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>NEET AI</title>
 
 <style>
+
+/* ===== BASE THEME ===== */
 body {{
     margin:0;
     font-family: Arial;
-    background: white;
-    color: black;
-    transition: 0.3s;
+    background:#0f0f0f;
+    color:white;
+    max-width:480px;
+    margin:auto;
+    transition:0.3s;
 }}
 
-.dark-mode {{
-    background: black;
-    color: white;
+/* LIGHT MODE */
+.light {{
+    background:white;
+    color:black;
 }}
 
+/* HEADER */
 .header {{
-    text-align:center;
-    padding:20px;
-    background: #f2f2f2;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px;
+    background:#1a1a1a;
+}}
+
+.light .header {{
+    background:#f2f2f2;
 }}
 
 .title {{
-    font-size:28px;
+    font-size:20px;
     font-weight:bold;
 }}
 
+/* SETTINGS ICON */
+.settings {{
+    cursor:pointer;
+    font-size:22px;
+}}
+
+/* BOX */
 .box {{
     text-align:center;
-    margin-top:50px;
+    margin-top:40px;
+    padding:10px;
 }}
 
+/* INPUT NEON EFFECT */
 input {{
-    padding:12px;
-    width:60%;
-    border:1px solid #ccc;
-    border-radius:8px;
+    width:90%;
+    padding:14px;
+    font-size:16px;
+    border-radius:10px;
+    border:2px solid #00f7ff;
+    outline:none;
+    background:transparent;
+    color:inherit;
+    box-shadow:0 0 10px #00f7ff;
 }}
 
+/* BUTTON */
 button {{
+    margin-top:10px;
     padding:12px 18px;
     border:none;
     background:#007bff;
     color:white;
     border-radius:8px;
+    font-size:16px;
     cursor:pointer;
 }}
 
-button:hover {{
-    background:#0056b3;
-}}
-
+/* ANSWER */
 .answer {{
     margin-top:20px;
     font-size:18px;
+    padding:10px;
+}}
+
+/* SETTINGS PANEL */
+.panel {{
+    position:fixed;
+    top:50px;
+    right:10px;
+    background:#222;
+    padding:10px;
+    border-radius:10px;
+    display:none;
+}}
+
+.light .panel {{
+    background:#eee;
+    color:black;
+}}
+
+.panel button {{
+    display:block;
+    width:100%;
+    margin:5px 0;
 }}
 
 </style>
@@ -85,36 +137,51 @@ button:hover {{
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
     <div class="title">🧠 NEET AI</div>
-    <p>DR.NIKHIL MBBS</p>
-
-    <button onclick="toggleDark()">🌙 Dark Mode</button>
+    <div class="settings" onclick="togglePanel()">⚙️</div>
 </div>
 
+<!-- SETTINGS PANEL -->
+<div class="panel" id="panel">
+    <button onclick="toggleTheme()">🌗 Theme</button>
+    <button onclick="alert('MCQ Mode Coming Soon 🔥')">📚 MCQ</button>
+    <button onclick="alert('Search Upgrade Coming Soon 🔍')">🔍 Search</button>
+</div>
+
+<!-- MAIN -->
 <div class="box">
 
     <form method="POST">
         <input name="question" placeholder="NEET question likho">
+        <br>
         <button type="submit">Pucho</button>
     </form>
 
-    <h3>Answer:</h3>
-    <p class="answer">{answer}</p>
+    <div class="answer">
+        <b>Answer:</b> {answer}
+    </div>
 
 </div>
 
 <script>
 
-// DARK MODE
-function toggleDark() {{
-    document.body.classList.toggle("dark-mode");
+/* SETTINGS PANEL */
+function togglePanel() {{
+    let p = document.getElementById("panel");
+    p.style.display = (p.style.display === "block") ? "none" : "block";
 }}
 
-// CLICK SOUND
+/* THEME TOGGLE */
+function toggleTheme() {{
+    document.body.classList.toggle("light");
+}}
+
+/* CLICK SOUND (OPTIONAL SAFE) */
 document.addEventListener("click", function() {{
-    let audio = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
-    audio.play();
+    let a = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3");
+    a.play();
 }});
 
 </script>
