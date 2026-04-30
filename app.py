@@ -95,7 +95,7 @@ def home():
             display: flex; 
             flex-direction: column; 
             gap: 24px; 
-            padding-bottom: 120px; /* Space for input */
+            padding-bottom: 120px;
         }
 
         .message { max-width: 85%; padding: 12px 18px; border-radius: 15px; line-height: 1.6; font-size: 16px; }
@@ -195,7 +195,7 @@ def home():
         body.dark-mode ::-webkit-scrollbar-thumb { background: #555; }
     </style>
 </head>
-<body>
+<body class="dark-mode"> <!-- Defaulting to Dark Mode as per screenshot -->
 
     <!-- Header -->
     <div class="header">
@@ -209,7 +209,7 @@ def home():
     <!-- Settings Panel -->
     <div class="settings-panel" id="settingsPanel">
         <button class="toggle-btn" onclick="toggleDarkMode()">
-            <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+            <span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
         </button>
     </div>
 
@@ -233,19 +233,17 @@ def home():
     </div>
 
     <script>
-        // Toggle Settings Panel
         function toggleSettings() {
             const panel = document.getElementById('settingsPanel');
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
         }
 
-        // Toggle Dark Mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
             document.getElementById('themeText').innerText = isDark ? 'Light Mode' : 'Dark Mode';
-            toggleSettings(); // Hide panel after click
+            toggleSettings();
         }
 
         function handleEnter(e) {
@@ -256,7 +254,12 @@ def home():
             const chat = document.getElementById("chatContainer");
             const msgDiv = document.createElement("div");
             msgDiv.className = "message " + (sender === "user" ? "user-message" : "ai-message");
-            msgDiv.innerHTML = text.replace(/\\n/g, '<br>');
+            
+            // Format bold text from markdown (**text**)
+            let formattedText = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+            formattedText = formattedText.replace(/\\n/g, '<br>');
+            
+            msgDiv.innerHTML = formattedText;
             chat.appendChild(msgDiv);
             window.scrollTo(0, document.body.scrollHeight);
         }
@@ -268,14 +271,9 @@ def home():
 
             if(!question) return;
 
-            // Clear input and append user question
             inputField.value = "";
             appendMessage("user", question);
 
-            // Play sound (optional)
-            new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3").play().catch(e => {});
-
-            // Show mystic loader at the bottom
             document.getElementById("chatContainer").appendChild(loader);
             loader.style.display = "block";
             window.scrollTo(0, document.body.scrollHeight);
@@ -292,7 +290,7 @@ def home():
                 appendMessage("ai", data.answer);
             } catch (error) {
                 loader.style.display = "none";
-                appendMessage("ai", "Oops! Network error. Dr. Nikhil, please try again.");
+                appendMessage("ai", "Oops! Network error. Please try again.");
             }
         }
     </script>
@@ -304,7 +302,7 @@ def home():
 def ask():
     try:
         if not client:
-            return jsonify({"answer": "Error: API Key is missing in Render."})
+            return jsonify({"answer": "Error: API Key is missing in Render Environment."})
 
         data = request.get_json()
         user_question = data.get("question", "")
@@ -312,14 +310,29 @@ def ask():
         if not user_question:
             return jsonify({"answer": "Empty question."})
 
-        # Changed to 'gemini-1.5-flash' to fix the 404 Not Found error
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=user_question,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction
+        # PRO TRICK: Bulletproof Fallback Mechanism
+        try:
+            # Plan A: Try the absolute latest 2.0 model
+            response = client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=user_question,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction
+                )
             )
-        )
+        except Exception as e1:
+            try:
+                # Plan B: Agar naya model nahi mila, toh universal fallback model
+                response = client.models.generate_content(
+                    model='gemini-1.5-flash-latest',
+                    contents=user_question,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction
+                    )
+                )
+            except Exception as e2:
+                # Agar sab fail ho jaye, error print karo UI par
+                return jsonify({"answer": f"API Error: Both models failed. Details: {str(e1)}"})
         
         return jsonify({"answer": response.text})
         
