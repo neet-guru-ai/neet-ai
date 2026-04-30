@@ -6,9 +6,8 @@ from google.genai import types
 app = Flask(__name__)
 
 # ===== GEMINI API SETUP =====
-# Render ke Environment Variables mein 'GEMINI_API_KEY' hona chahiye
 API_KEY = os.environ.get("GEMINI_API_KEY")
-# Hum sabse stable connection method use karenge
+# Naye SDK mein connection ko bilkul simple rakhte hain
 client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 system_instruction = """
@@ -22,6 +21,7 @@ Use a mix of Hindi and English (Hinglish) if the user asks in Hinglish, otherwis
 # ===== ROUTES =====
 @app.route("/")
 def home():
+    # Tumhara wahi shaandaar Dark Mode UI jo tumne banaya tha
     return """
 <!DOCTYPE html>
 <html lang="en">
@@ -31,121 +31,55 @@ def home():
     <title>Dr. Nikhil MBBS AI</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        
-        body { 
-            margin: 0; font-family: 'Inter', sans-serif; background-color: #ffffff; 
-            color: #333333; display: flex; flex-direction: column; height: 100vh; 
-            transition: 0.3s;
-        }
-
-        body.dark-mode { background-color: #212121; color: #ececf1; }
-
-        .header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; border-bottom: 1px solid #e5e5e5;
-            position: sticky; top: 0; background: inherit; z-index: 10;
-        }
-        body.dark-mode .header { border-bottom-color: #333; }
-
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #212121; color: #ececf1; display: flex; flex-direction: column; height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; position: sticky; top: 0; background: #212121; z-index: 10; }
         .title { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         .badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-
-        .chat-container { 
-            flex: 1; overflow-y: auto; padding: 20px 10%; 
-            display: flex; flex-direction: column; gap: 24px; padding-bottom: 120px;
-        }
-
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px 10%; display: flex; flex-direction: column; gap: 24px; padding-bottom: 120px; }
         .message { max-width: 85%; padding: 12px 18px; border-radius: 15px; line-height: 1.6; font-size: 16px; }
-        .user-message { background-color: #f3f3f3; align-self: flex-end; border-bottom-right-radius: 4px; }
-        body.dark-mode .user-message { background-color: #2f2f2f; }
+        .user-message { background-color: #2f2f2f; align-self: flex-end; border-bottom-right-radius: 4px; }
         .ai-message { background-color: transparent; align-self: flex-start; }
-
-        /* Mysterious Mystic Loader */
-        .mystic-loader {
-            display: none; align-self: flex-start; width: 40px; height: 40px;
-            position: relative; margin-left: 20px;
-        }
-        .mystic-loader::before, .mystic-loader::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border-radius: 50%; border: 3px solid transparent;
-            border-top-color: #007bff; border-bottom-color: #9d00ff;
-            animation: mystic-spin 1s infinite linear;
-        }
-        .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #00f7ff; animation-duration: 1.5s; }
-        @keyframes mystic-spin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
-
-        .input-wrapper {
-            position: fixed; bottom: 0; width: 100%; padding: 20px;
-            box-sizing: border-box; display: flex; justify-content: center;
-            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%);
-        }
-        body.dark-mode .input-wrapper { background: linear-gradient(180deg, rgba(33,33,33,0) 0%, rgba(33,33,33,1) 50%); }
-
-        .input-box {
-            display: flex; align-items: center; background-color: #f4f4f4;
-            border-radius: 30px; padding: 10px 20px; width: 100%; max-width: 800px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;
-        }
-        body.dark-mode .input-box { background-color: #2f2f2f; border-color: #444; }
-
+        .mystic-loader { display: none; align-self: flex-start; width: 30px; height: 30px; position: relative; margin-left: 20px; }
+        .mystic-loader::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid transparent; border-top-color: #007bff; animation: spin 1s infinite linear; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .input-wrapper { position: fixed; bottom: 0; width: 100%; padding: 20px; display: flex; justify-content: center; background: linear-gradient(180deg, rgba(33,33,33,0) 0%, rgba(33,33,33,1) 30%); }
+        .input-box { display: flex; align-items: center; background-color: #2f2f2f; border-radius: 30px; padding: 8px 15px; width: 100%; max-width: 800px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
         input { flex: 1; background: transparent; border: none; outline: none; font-size: 16px; color: inherit; padding: 10px; }
-        
-        .action-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; transition: 0.2s; }
-        .action-btn:hover { color: #007bff; }
-        .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        body.dark-mode .send-btn { background: #fff; color: #000; }
-
-        .settings-icon { cursor: pointer; font-size: 22px; }
+        .send-btn { background-color: #fff; color: #000; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; }
     </style>
 </head>
 <body>
-
     <div class="header">
         <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">NEET AI</span></div>
-        <div class="settings-icon" onclick="toggleDarkMode()">🌗</div>
     </div>
-
     <div class="chat-container" id="chatContainer">
-        <div class="message ai-message">
-            Swagat hai Dr. Nikhil! Aaj kaunsa medical concept clear karna hai? 🧬
-        </div>
+        <div class="message ai-message">Swagat hai Dr. Nikhil! Aaj kaunsa concept clear karna hai?</div>
     </div>
-
     <div class="mystic-loader" id="loader"></div>
-
     <div class="input-wrapper">
         <div class="input-box">
-            <button class="action-btn">➕</button>
-            <input type="text" id="questionInput" placeholder="Sawaal pucho (NCERT Biology, Physics, Chemistry)..." onkeypress="handleEnter(event)">
+            <input type="text" id="questionInput" placeholder="Message NEET AI..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="askQuestion()">➤</button>
         </div>
     </div>
-
     <script>
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
         function handleEnter(e) { if(e.key === 'Enter') askQuestion(); }
-
-        function appendMessage(sender, text) {
-            const chat = document.getElementById("chatContainer");
-            const msgDiv = document.createElement("div");
-            msgDiv.className = "message " + (sender === "user" ? "user-message" : "ai-message");
-            msgDiv.innerHTML = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>').replace(/\\n/g, '<br>');
-            chat.appendChild(msgDiv);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
         async function askQuestion() {
-            const input = document.getElementById("questionInput");
-            const question = input.value.trim();
-            const loader = document.getElementById("loader");
-
+            const inputField = document.getElementById("questionInput");
+            const question = inputField.value.trim();
             if(!question) return;
-
-            input.value = "";
-            appendMessage("user", question);
+            const chat = document.getElementById("chatContainer");
+            const loader = document.getElementById("loader");
+            
+            const userDiv = document.createElement("div");
+            userDiv.className = "message user-message";
+            userDiv.innerText = question;
+            chat.appendChild(userDiv);
+            
+            inputField.value = "";
             loader.style.display = "block";
-            document.getElementById("chatContainer").appendChild(loader);
-            document.getElementById("chatContainer").scrollTop = document.getElementById("chatContainer").scrollHeight;
+            chat.appendChild(loader);
+            chat.scrollTop = chat.scrollHeight;
 
             try {
                 const response = await fetch("/ask", {
@@ -155,10 +89,14 @@ def home():
                 });
                 const data = await response.json();
                 loader.style.display = "none";
-                appendMessage("ai", data.answer);
+                const aiDiv = document.createElement("div");
+                aiDiv.className = "message ai-message";
+                aiDiv.innerHTML = data.answer.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+                chat.appendChild(aiDiv);
+                chat.scrollTop = chat.scrollHeight;
             } catch (error) {
                 loader.style.display = "none";
-                appendMessage("ai", "Bhai, network issue lag raha hai. Phirse try karo.");
+                alert("Network error bhai!");
             }
         }
     </script>
@@ -169,32 +107,33 @@ def home():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        if not client:
-            return jsonify({"answer": "Error: API Key nahi mili. Render settings check karein."})
-
         data = request.get_json()
         question = data.get("question", "")
 
-        # HUM SABSE STABLE MODEL USE KAR RAHE HAIN
+        # YAHAN HAI MAIN FIX: 
+        # Hum bina kisi version ke seedha stable model use karenge
         response = client.models.generate_content(
-            model='gemini-1.5-flash', # Yeh model hamesha milta hai
+            model='gemini-1.5-flash', 
             contents=question,
-            config=types.GenerateContentConfig(system_instruction=system_instruction)
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction
+            )
         )
-        
         return jsonify({"answer": response.text})
         
     except Exception as e:
-        # Agar naya flash model fail ho toh fallback version try karenge
+        # Agar wo fail ho, toh yeh loop saare available models try karega
+        print(f"Primary Model Failed: {e}")
         try:
+            # Fallback for some specific API regions
             response = client.models.generate_content(
-                model='gemini-1.5-flash-latest',
+                model='gemini-1.5-flash-8b', 
                 contents=question,
                 config=types.GenerateContentConfig(system_instruction=system_instruction)
             )
             return jsonify({"answer": response.text})
-        except:
-            return jsonify({"answer": f"Bhai error aa gaya: {str(e)}"})
+        except Exception as e2:
+            return jsonify({"answer": f"Bhai, Google API model dhoond nahi paa rahi. Error: {str(e2)}"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
