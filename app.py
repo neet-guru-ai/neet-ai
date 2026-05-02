@@ -171,7 +171,8 @@ def ask():
         question = data.get("question", "")
 
         # 🚀 DIRECT GOOGLE SERVER CALL (No Library, No Error) 🚀
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+        # Meri galti sudharne wali line (maine '-latest' add kar diya hai)
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
         headers = {'Content-Type': 'application/json'}
         payload = {
             "systemInstruction": {
