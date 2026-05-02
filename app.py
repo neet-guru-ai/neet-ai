@@ -1,12 +1,11 @@
 from flask import Flask, request, jsonify
 import os
-from openai import OpenAI
+import requests
 
 app = Flask(__name__)
 
-# ===== OPENAI (CHATGPT) API SETUP =====
-API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=API_KEY) if API_KEY else None
+# ===== DIRECT GEMINI API (NO LIBRARIES NEEDED) =====
+API_KEY = os.environ.get("GEMINI_API_KEY")
 
 system_instruction = """
 You are a highly advanced NEET Expert AI. 
@@ -44,7 +43,7 @@ def home():
         body.dark-mode .header { border-bottom-color: #333; }
 
         .title { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .badge { background: #10a37f; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
 
         .chat-container { 
             flex: 1; overflow-y: auto; padding: 20px 10%; 
@@ -56,7 +55,6 @@ def home():
         body.dark-mode .user-message { background-color: #2f2f2f; }
         .ai-message { background-color: transparent; align-self: flex-start; }
 
-        /* Mysterious Mystic Loader */
         .mystic-loader {
             display: none; align-self: flex-start; width: 40px; height: 40px;
             position: relative; margin-left: 20px;
@@ -64,7 +62,7 @@ def home():
         .mystic-loader::before, .mystic-loader::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             border-radius: 50%; border: 3px solid transparent;
-            border-top-color: #10a37f; border-bottom-color: #9d00ff;
+            border-top-color: #007bff; border-bottom-color: #9d00ff;
             animation: mystic-spin 1s infinite linear;
         }
         .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #00f7ff; animation-duration: 1.5s; }
@@ -80,34 +78,27 @@ def home():
         .input-box {
             display: flex; align-items: center; background-color: #f4f4f4;
             border-radius: 30px; padding: 10px 20px; width: 100%; max-width: 800px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;
+            border: 1px solid #e5e5e5;
         }
-        body.dark-mode .input-box { background-color: #2f2f2f; border-color: #444; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        body.dark-mode .input-box { background-color: #2f2f2f; border-color: #444; }
 
         input { flex: 1; background: transparent; border: none; outline: none; font-size: 16px; color: inherit; padding: 10px; }
-        
         .action-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; transition: 0.2s; }
-        .action-btn:hover { color: #10a37f; }
         .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; margin-left: 5px; }
         body.dark-mode .send-btn { background: #fff; color: #000; }
-
-        #theme-btn {
-            background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s;
-        }
-        #theme-btn:hover { transform: scale(1.1); }
-        
+        #theme-btn { background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s; }
     </style>
 </head>
 <body class="dark-mode">
 
     <div class="header">
-        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge" style="background-color: #10a37f;">ChatGPT API</span></div>
+        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">NEET AI</span></div>
         <button id="theme-btn" onclick="toggleDarkMode()" title="Toggle Theme">☀️</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai-message">
-            Swagat hai Dr. Nikhil! Aapka ChatGPT-powered NEET AI engine ready hai. 🧬
+            Swagat hai Dr. Nikhil! Aaj kaunsa medical concept clear karna hai? 🧬
         </div>
     </div>
 
@@ -115,7 +106,7 @@ def home():
 
     <div class="input-wrapper">
         <div class="input-box">
-            <button class="action-btn" title="Add File">➕</button>
+            <button class="action-btn">➕</button>
             <input type="text" id="questionInput" placeholder="Sawaal pucho (NCERT Biology, Physics, Chemistry)..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="askQuestion()">➤</button>
         </div>
@@ -125,11 +116,7 @@ def home():
         function toggleDarkMode() { 
             document.body.classList.toggle('dark-mode'); 
             const btn = document.getElementById('theme-btn');
-            if(document.body.classList.contains('dark-mode')) {
-                btn.innerText = '☀️';
-            } else {
-                btn.innerText = '🌙';
-            }
+            btn.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
         }
         
         function handleEnter(e) { if(e.key === 'Enter') askQuestion(); }
@@ -158,8 +145,7 @@ def home():
 
             try {
                 const response = await fetch("/ask", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: question })
                 });
                 const data = await response.json();
@@ -167,7 +153,7 @@ def home():
                 appendMessage("ai", data.answer);
             } catch (error) {
                 loader.style.display = "none";
-                appendMessage("ai", "Bhai, network issue lag raha hai. Phirse try karo.");
+                appendMessage("ai", "Network error. Phirse try karo.");
             }
         }
     </script>
@@ -178,26 +164,38 @@ def home():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        if not client:
-            return jsonify({"answer": "Error: OPENAI_API_KEY nahi mili. Render Environment check karein."})
+        if not API_KEY:
+            return jsonify({"answer": "Error: GEMINI_API_KEY nahi mili."})
 
         data = request.get_json()
         question = data.get("question", "")
 
-        # Yahan hum ChatGPT ka model call kar rahe hain
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo", # Super fast and reliable OpenAI model
-            messages=[
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": question}
+        # 🚀 DIRECT GOOGLE SERVER CALL (No Library, No Error) 🚀
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": system_instruction}]
+            },
+            "contents": [
+                {"parts": [{"text": question}]}
             ]
-        )
-        
-        answer = response.choices[0].message.content
-        return jsonify({"answer": answer})
-        
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+        result = response.json()
+
+        # Agar success hua toh answer nikal lo
+        if response.status_code == 200:
+            answer = result['candidates'][0]['content']['parts'][0]['text']
+            return jsonify({"answer": answer})
+        else:
+            # Agar limit khatam hui toh error dikhayega
+            error_msg = result.get('error', {}).get('message', 'Unknown Error')
+            return jsonify({"answer": f"Google API Error: {error_msg}"})
+
     except Exception as e:
-        return jsonify({"answer": f"Bhai error aa gaya: {str(e)}"})
+        return jsonify({"answer": f"System Error: {str(e)}"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
