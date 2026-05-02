@@ -4,12 +4,10 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# ===== STABLE GEMINI API SETUP =====
+# ===== STABLE GEMINI API SETUP (100% FIX) =====
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
-else:
-    print("Warning: GEMINI_API_KEY not found in environment.")
 
 system_instruction = """
 You are a highly advanced NEET Expert AI. 
@@ -85,7 +83,7 @@ def home():
             border-radius: 30px; padding: 10px 20px; width: 100%; max-width: 800px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;
         }
-        body.dark-mode .input-box { background-color: #2f2f2f; border-color: #444; }
+        body.dark-mode .input-box { background-color: #2f2f2f; border-color: #444; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
         input { flex: 1; background: transparent; border: none; outline: none; font-size: 16px; color: inherit; padding: 10px; }
         
@@ -94,14 +92,20 @@ def home():
         .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         body.dark-mode .send-btn { background: #fff; color: #000; }
 
-        .settings-icon { cursor: pointer; font-size: 22px; }
+        /* The New Settings Icon Button */
+        #theme-btn {
+            background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s;
+        }
+        #theme-btn:hover { transform: scale(1.1); }
+        
     </style>
 </head>
 <body class="dark-mode">
 
     <div class="header">
         <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">NEET AI</span></div>
-        <div class="settings-icon" onclick="toggleDarkMode()">🌗</div>
+        <!-- Perfect Settings/Theme Icon -->
+        <button id="theme-btn" onclick="toggleDarkMode()" title="Toggle Theme">☀️</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
@@ -114,14 +118,24 @@ def home():
 
     <div class="input-wrapper">
         <div class="input-box">
-            <button class="action-btn">➕</button>
+            <button class="action-btn" title="Add File">➕</button>
             <input type="text" id="questionInput" placeholder="Sawaal pucho (NCERT Biology, Physics, Chemistry)..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="askQuestion()">➤</button>
         </div>
     </div>
 
     <script>
-        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+        function toggleDarkMode() { 
+            document.body.classList.toggle('dark-mode'); 
+            const btn = document.getElementById('theme-btn');
+            // Change icon based on theme
+            if(document.body.classList.contains('dark-mode')) {
+                btn.innerText = '☀️';
+            } else {
+                btn.innerText = '🌙';
+            }
+        }
+        
         function handleEnter(e) { if(e.key === 'Enter') askQuestion(); }
 
         function appendMessage(sender, text) {
@@ -163,7 +177,7 @@ def home():
     </script>
 </body>
 </html>
-    """
+"""
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -174,7 +188,7 @@ def ask():
         data = request.get_json()
         question = data.get("question", "")
 
-        # Yahan hum purani lekin stable library use kar rahe hain
+        # Stable Model Call
         model = genai.GenerativeModel('gemini-1.5-flash',
                                       system_instruction=system_instruction)
         response = model.generate_content(question)
