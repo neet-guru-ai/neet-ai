@@ -1,13 +1,12 @@
 from flask import Flask, request, jsonify
 import os
-import google.generativeai as genai
+from openai import OpenAI
 
 app = Flask(__name__)
 
-# ===== STABLE GEMINI API SETUP (100% FIX) =====
-API_KEY = os.environ.get("GEMINI_API_KEY")
-if API_KEY:
-    genai.configure(api_key=API_KEY)
+# ===== OPENAI (CHATGPT) API SETUP =====
+API_KEY = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=API_KEY) if API_KEY else None
 
 system_instruction = """
 You are a highly advanced NEET Expert AI. 
@@ -45,7 +44,7 @@ def home():
         body.dark-mode .header { border-bottom-color: #333; }
 
         .title { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge { background: #10a37f; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
 
         .chat-container { 
             flex: 1; overflow-y: auto; padding: 20px 10%; 
@@ -65,7 +64,7 @@ def home():
         .mystic-loader::before, .mystic-loader::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             border-radius: 50%; border: 3px solid transparent;
-            border-top-color: #007bff; border-bottom-color: #9d00ff;
+            border-top-color: #10a37f; border-bottom-color: #9d00ff;
             animation: mystic-spin 1s infinite linear;
         }
         .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #00f7ff; animation-duration: 1.5s; }
@@ -88,11 +87,10 @@ def home():
         input { flex: 1; background: transparent; border: none; outline: none; font-size: 16px; color: inherit; padding: 10px; }
         
         .action-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; transition: 0.2s; }
-        .action-btn:hover { color: #007bff; }
-        .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .action-btn:hover { color: #10a37f; }
+        .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; margin-left: 5px; }
         body.dark-mode .send-btn { background: #fff; color: #000; }
 
-        /* The New Settings Icon Button */
         #theme-btn {
             background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s;
         }
@@ -103,14 +101,13 @@ def home():
 <body class="dark-mode">
 
     <div class="header">
-        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">NEET AI</span></div>
-        <!-- Perfect Settings/Theme Icon -->
+        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge" style="background-color: #10a37f;">ChatGPT API</span></div>
         <button id="theme-btn" onclick="toggleDarkMode()" title="Toggle Theme">☀️</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai-message">
-            Swagat hai Dr. Nikhil! Aaj kaunsa medical concept clear karna hai? 🧬
+            Swagat hai Dr. Nikhil! Aapka ChatGPT-powered NEET AI engine ready hai. 🧬
         </div>
     </div>
 
@@ -128,7 +125,6 @@ def home():
         function toggleDarkMode() { 
             document.body.classList.toggle('dark-mode'); 
             const btn = document.getElementById('theme-btn');
-            // Change icon based on theme
             if(document.body.classList.contains('dark-mode')) {
                 btn.innerText = '☀️';
             } else {
@@ -182,18 +178,23 @@ def home():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        if not API_KEY:
-            return jsonify({"answer": "Error: API Key nahi mili. Render settings check karein."})
+        if not client:
+            return jsonify({"answer": "Error: OPENAI_API_KEY nahi mili. Render Environment check karein."})
 
         data = request.get_json()
         question = data.get("question", "")
 
-        # Stable Model Call
-        model = genai.GenerativeModel('gemini-1.5-flash',
-                                      system_instruction=system_instruction)
-        response = model.generate_content(question)
+        # Yahan hum ChatGPT ka model call kar rahe hain
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", # Super fast and reliable OpenAI model
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": question}
+            ]
+        )
         
-        return jsonify({"answer": response.text})
+        answer = response.choices[0].message.content
+        return jsonify({"answer": answer})
         
     except Exception as e:
         return jsonify({"answer": f"Bhai error aa gaya: {str(e)}"})
