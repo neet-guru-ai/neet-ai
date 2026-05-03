@@ -4,7 +4,7 @@ import requests
 
 app = Flask(__name__)
 
-# ===== HUGGING FACE API SETUP (MISTRAL ENGINE) =====
+# ===== HUGGING FACE API SETUP (QWEN ENGINE - UNGATED) =====
 API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
 
 system_instruction = """
@@ -43,7 +43,7 @@ def home():
         body.dark-mode .header { border-bottom-color: #333; }
 
         .title { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        .badge { background: #ff9d00; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge { background: #8a2be2; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
 
         .chat-container { 
             flex: 1; overflow-y: auto; padding: 20px 10%; 
@@ -62,10 +62,10 @@ def home():
         .mystic-loader::before, .mystic-loader::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             border-radius: 50%; border: 3px solid transparent;
-            border-top-color: #ff9d00; border-bottom-color: #9d00ff;
+            border-top-color: #8a2be2; border-bottom-color: #00f7ff;
             animation: mystic-spin 1s infinite linear;
         }
-        .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #00f7ff; animation-duration: 1.5s; }
+        .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #ff9d00; animation-duration: 1.5s; }
         @keyframes mystic-spin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
 
         .input-wrapper {
@@ -92,13 +92,13 @@ def home():
 <body class="dark-mode">
 
     <div class="header">
-        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">Mistral AI Engine</span></div>
+        <div class="title">🩺 Dr. Nikhil MBBS <span class="badge">Qwen AI Engine</span></div>
         <button id="theme-btn" onclick="toggleDarkMode()" title="Toggle Theme">☀️</button>
     </div>
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai-message">
-            Swagat hai Dr. Nikhil! Aapka naya Hugging Face Mistral engine bilkul ready hai. Sawaal puchiye! 🧬
+            Swagat hai Dr. Nikhil! Aapka naya Qwen Engine bilkul ready hai. 🧬
         </div>
     </div>
 
@@ -107,7 +107,7 @@ def home():
     <div class="input-wrapper">
         <div class="input-box">
             <button class="action-btn">➕</button>
-            <input type="text" id="questionInput" placeholder="Message NEET AI (NCERT Topics)..." onkeypress="handleEnter(event)">
+            <input type="text" id="questionInput" placeholder="Sawaal pucho..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="askQuestion()">➤</button>
         </div>
     </div>
@@ -170,33 +170,37 @@ def ask():
         data = request.get_json()
         question = data.get("question", "")
 
-        # 🚀 DIRECT HUGGING FACE SERVER CALL (MISTRAL MODEL) 🚀
-        url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions"
+        # 🚀 QWEN 2.5 - Super Fast & Ungated Model 🚀
+        url = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-7B-Instruct/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "mistralai/Mistral-7B-Instruct-v0.3",
+            "model": "Qwen/Qwen2.5-7B-Instruct",
             "messages": [
                 {"role": "system", "content": system_instruction},
                 {"role": "user", "content": question}
             ],
-            "max_tokens": 800
+            "max_tokens": 500
         }
 
         response = requests.post(url, headers=headers, json=payload)
-        result = response.json()
+        
+        # ERROR CATCHER: Agar HF ne HTML bheja toh crash nahi hoga
+        try:
+            result = response.json()
+        except Exception:
+            return jsonify({"answer": f"Bhai, API ne galti se yeh bheja hai: {response.text[:200]}"})
 
         if response.status_code == 200:
             answer = result['choices'][0]['message']['content']
             return jsonify({"answer": answer})
         else:
-            # Agar model load ho raha hoga toh yeh custom error aayega
             error_msg = result.get('error', 'Unknown Error')
             if 'loading' in str(error_msg).lower():
-                 return jsonify({"answer": "Bhai, AI ka engine abhi start ho raha hai (Cold Start). Bas 20 seconds wait karke wapas sawaal pucho!"})
-            return jsonify({"answer": f"Hugging Face API Error: {error_msg}"})
+                 return jsonify({"answer": "Engine abhi start ho raha hai. Bas 15 seconds wait karke wapas pucho!"})
+            return jsonify({"answer": f"API Error: {error_msg}"})
 
     except Exception as e:
         return jsonify({"answer": f"System Error: {str(e)}"})
