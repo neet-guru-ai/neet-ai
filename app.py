@@ -4,15 +4,16 @@ from huggingface_hub import InferenceClient
 
 app = Flask(__name__)
 
-# ===== OFFICIAL HUGGING FACE ENGINE (NO CRASHES) =====
+# ===== OFFICIAL HUGGING FACE ENGINE =====
 API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
 
+# 🧠 BRAIN SURGERY: AI ko strict instructions taaki wo comedy na kare
 system_instruction = """
 You are a highly advanced NEET Expert AI. 
 Strictly answer questions related to NCERT Biology, Physics, and Chemistry for Class 11 and 12.
+CRITICAL RULE FOR LANGUAGE: When explaining in Hindi or Hinglish, DO NOT translate scientific or technical terms into pure Hindi (e.g., do NOT translate 'Genetics', 'Nucleus', 'DNA', 'Reproduction'). Always keep scientific terms in English. Explain concepts logically, scientifically, and accurately.
 Provide clear, concise, and highly accurate answers suitable for a NEET aspirant.
-If the user asks something completely outside of studies or science, politely decline and ask them to focus on NEET topics.
-Use a mix of Hindi and English (Hinglish) if the user asks in Hinglish, otherwise reply in English.
+If the user asks something completely outside of studies or science, politely decline.
 """
 
 @app.route("/")
@@ -68,12 +69,13 @@ def home():
         .mystic-loader::after { border-top-color: transparent; border-bottom-color: transparent; border-left-color: #00f7ff; animation-duration: 1.5s; }
         @keyframes mystic-spin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
 
+        /* 🎨 UI FIX: Input box aur disclaimer ko center karne ke liye */
         .input-wrapper {
-            position: fixed; bottom: 0; width: 100%; padding: 20px;
-            box-sizing: border-box; display: flex; justify-content: center;
-            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%);
+            position: fixed; bottom: 0; width: 100%; padding: 15px 20px;
+            box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 35%);
         }
-        body.dark-mode .input-wrapper { background: linear-gradient(180deg, rgba(33,33,33,0) 0%, rgba(33,33,33,1) 50%); }
+        body.dark-mode .input-wrapper { background: linear-gradient(180deg, rgba(33,33,33,0) 0%, rgba(33,33,33,1) 35%); }
 
         .input-box {
             display: flex; align-items: center; background-color: #f4f4f4;
@@ -87,6 +89,10 @@ def home():
         .send-btn { background: #000; color: #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; justify-content: center; align-items: center; cursor: pointer; border: none; margin-left: 5px; }
         body.dark-mode .send-btn { background: #fff; color: #000; }
         #theme-btn { background: none; border: none; font-size: 24px; cursor: pointer; transition: 0.3s; }
+        
+        /* 📝 DISCLAIMER CSS */
+        .disclaimer { font-size: 12px; color: #888; margin-top: 8px; text-align: center; }
+        body.dark-mode .disclaimer { color: #aaa; }
     </style>
 </head>
 <body class="dark-mode">
@@ -98,7 +104,7 @@ def home():
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai-message">
-            Swagat hai Dr. Nikhil! Aapka custom UI aur official AI engine ready hai. Sawaal puchiye! 🧬
+            Swagat hai Dr. Nikhil! Main ek advanced NEET AI hoon. Sawaal puchiye! 🧬
         </div>
     </div>
 
@@ -110,6 +116,8 @@ def home():
             <input type="text" id="questionInput" placeholder="Message NEET AI (NCERT Topics)..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="askQuestion()">➤</button>
         </div>
+        <!-- DISCLAIMER TEXT ADDED HERE -->
+        <div class="disclaimer">AI can make mistakes. Please verify important information from NCERT.</div>
     </div>
 
     <script>
@@ -170,7 +178,6 @@ def ask():
         data = request.get_json()
         question = data.get("question", "")
 
-        # Official Library Call - No Manual JSON parsing required!
         client = InferenceClient("Qwen/Qwen2.5-7B-Instruct", token=API_KEY)
         
         messages = [
@@ -178,7 +185,6 @@ def ask():
             {"role": "user", "content": question}
         ]
         
-        # Requesting answer from HF
         response = client.chat_completion(messages, max_tokens=800)
         answer = response.choices[0].message.content
         
